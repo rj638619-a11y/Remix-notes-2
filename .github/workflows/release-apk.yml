@@ -144,13 +144,13 @@ jobs:
           
           notes_file="$RUNNER_TEMP/release_notes.txt"
           cat <<EOF > "$notes_file"
-This is an automatically generated optimized production-quality release APK.
-The APK was built by GitHub Actions and undergoes code optimization (minification and resource shrinking).
-GitHub Actions Run Number: ${{ github.run_number }}
-GitHub Actions Run Attempt: ${{ github.run_attempt }}
-Source Commit SHA: ${{ github.sha }}
-The APK is fully signed with a temporary production-quality release keystore.
-EOF
+          This is an automatically generated optimized production-quality release APK.
+          The APK was built by GitHub Actions and undergoes code optimization (minification and resource shrinking).
+          GitHub Actions Run Number: \${{ github.run_number }}
+          GitHub Actions Run Attempt: \${{ github.run_attempt }}
+          Source Commit SHA: \${{ github.sha }}
+          The APK is fully signed with a temporary production-quality release keystore.
+          EOF
           
           gh release create "release-${{ github.run_number }}-${{ github.run_attempt }}" \
             --title "Release APK #${{ github.run_number }}" \

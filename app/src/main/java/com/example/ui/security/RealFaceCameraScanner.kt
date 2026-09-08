@@ -64,6 +64,7 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -92,6 +93,7 @@ import com.example.util.FaceSignature
 import com.example.util.RealFaceAnalyzer
 import com.example.util.VibrationHelper
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.util.concurrent.Executors
 import kotlin.math.abs
 
@@ -110,6 +112,7 @@ fun RealFaceCameraScanner(
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val colors = GlassTheme.colors
+    val scope = rememberCoroutineScope()
 
     var hasCameraPermission by remember {
         mutableStateOf(
@@ -196,33 +199,34 @@ fun RealFaceCameraScanner(
         when (mode) {
             is RealFaceScannerMode.Unlock -> {
                 val enrolled = mode.enrolledSignature
-                val currentSig = primaryFace.computeSignature()
+                if (enrolled == null) {
+                    consecutiveValidFrames = 0
+                    statusText = "Security Error: No enrolled face profile found."
+                } else {
+                    val currentSig = primaryFace.computeSignature()
+                    if (currentSig != null) {
+                        val score = enrolled.matchScore(currentSig)
+                        matchScore = score
 
-                if (enrolled != null && currentSig != null) {
-                    val score = enrolled.matchScore(currentSig)
-                    matchScore = score
-
-                    if (score >= 0.70f) {
-                        statusText = "Biometric Match: ${(score * 100).toInt()}% • Hold steady"
-                        if (consecutiveValidFrames >= 3) {
-                            scanStatus = "SUCCESS"
-                            statusText = "Face ID Verified!"
-                            VibrationHelper.success(context)
-                            delay(450)
-                            mode.onSuccess()
+                        val matchThreshold = 0.75f
+                        if (score >= matchThreshold) {
+                            statusText = "Biometric Match: ${(score * 100).toInt()}% • Hold steady"
+                            if (consecutiveValidFrames >= 3) {
+                                scanStatus = "SUCCESS"
+                                statusText = "Face ID Verified!"
+                                VibrationHelper.success(context)
+                                scope.launch {
+                                    delay(450)
+                                    mode.onSuccess()
+                                }
+                            }
+                        } else {
+                            consecutiveValidFrames = 0
+                            statusText = "Face not recognized (${(score * 100).toInt()}% match)"
                         }
                     } else {
-                        statusText = "Face not recognized (${(score * 100).toInt()}% match)"
-                    }
-                } else {
-                    // No enrolled signature -> authentic real human face detection + liveness verification
-                    statusText = "Real Face Detected • Verifying liveness..."
-                    if (consecutiveValidFrames >= 4) {
-                        scanStatus = "SUCCESS"
-                        statusText = "Face Verified!"
-                        VibrationHelper.success(context)
-                        delay(450)
-                        mode.onSuccess()
+                        consecutiveValidFrames = 0
+                        statusText = "Aligning facial features... Look directly at the camera"
                     }
                 }
             }
@@ -236,8 +240,10 @@ fun RealFaceCameraScanner(
                         scanStatus = "SUCCESS"
                         statusText = "Face Profile Enrolled!"
                         VibrationHelper.success(context)
-                        delay(500)
-                        mode.onEnrolled(currentSig)
+                        scope.launch {
+                            delay(500)
+                            mode.onEnrolled(currentSig)
+                        }
                     }
                 } else {
                     statusText = "Aligning facial features..."

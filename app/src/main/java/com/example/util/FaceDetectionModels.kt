@@ -95,11 +95,12 @@ data class FaceSignature(
      * Compare against another signature and compute a match similarity score (0.0 to 1.0).
      */
     fun matchScore(other: FaceSignature): Float {
-        val d1 = abs(eyeDistanceRatio - other.eyeDistanceRatio) / 0.15f
-        val d2 = abs(eyeToNoseRatio - other.eyeToNoseRatio) / 0.25f
-        val d3 = abs(noseToMouthRatio - other.noseToMouthRatio) / 0.30f
-        val d4 = abs(mouthWidthRatio - other.mouthWidthRatio) / 0.25f
-        val d5 = abs(faceAspectRatio - other.faceAspectRatio) / 0.25f
+        // Significantly reduced denominators (lower tolerance windows) to prevent unauthorized faces from matching.
+        val d1 = abs(eyeDistanceRatio - other.eyeDistanceRatio) / 0.06f
+        val d2 = abs(eyeToNoseRatio - other.eyeToNoseRatio) / 0.10f
+        val d3 = abs(noseToMouthRatio - other.noseToMouthRatio) / 0.12f
+        val d4 = abs(mouthWidthRatio - other.mouthWidthRatio) / 0.10f
+        val d5 = abs(faceAspectRatio - other.faceAspectRatio) / 0.10f
 
         val totalDist = (d1 * 1.5f + d2 * 1.2f + d3 * 1.0f + d4 * 1.0f + d5 * 1.0f) / 5.7f
         val score = (1.0f - totalDist).coerceIn(0f, 1f)
