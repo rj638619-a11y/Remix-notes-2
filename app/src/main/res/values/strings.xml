@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">HTML Notes</string>
+    <string name="widget_name">HTML Notes Pinned</string>
+    <string name="widget_description">View and quickly open your pinned notes directly from your home screen</string>
+</resources>

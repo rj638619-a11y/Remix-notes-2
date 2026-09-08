@@ -1,0 +1,8 @@
+{
+  "name": "HTML Notes",
+  "description": "A sleek glassmorphism note app supporting HTML, PDF reader, and real-time biometric Face Unlock security.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
